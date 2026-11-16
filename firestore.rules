@@ -1,0 +1,94 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidContentItem(data) {
+      return data.userId == request.auth.uid &&
+             (!('title' in data) || data.title == null || (data.title is string && data.title.size() <= 5000)) &&
+             (!('type' in data) || data.type == null || (data.type is string && data.type.size() <= 64)) &&
+             (!('url' in data) || data.url == null || (data.url is string && data.url.size() <= 4096)) &&
+             (!('imageUrl' in data) || data.imageUrl == null || (data.imageUrl is string && data.imageUrl.size() <= 500000)) &&
+             (!('siteName' in data) || data.siteName == null || (data.siteName is string && data.siteName.size() <= 512)) &&
+             (!('author' in data) || data.author == null || (data.author is string && data.author.size() <= 512)) &&
+             (!('price' in data) || data.price == null || (data.price is string && data.price.size() <= 128)) &&
+             (!('length' in data) || data.length == null || (data.length is string && data.length.size() <= 128)) &&
+             (!('location' in data) || data.location == null || (data.location is string && data.location.size() <= 512)) &&
+             (!('description' in data) || data.description == null || (data.description is string && data.description.size() <= 50000)) &&
+             (!('notes' in data) || data.notes == null || (data.notes is string && data.notes.size() <= 100000)) &&
+             (!('source' in data) || data.source == null || (data.source is string && data.source.size() <= 2048)) &&
+             (!('status' in data) || data.status == null || (data.status is string && data.status.size() <= 128)) &&
+             (!('alivenessScore' in data) || data.alivenessScore == null || (data.alivenessScore is number && data.alivenessScore >= 0 && data.alivenessScore <= 100)) &&
+             (!('tags' in data) || data.tags == null || (data.tags is list && data.tags.size() <= 300)) &&
+             (!('relevanceScore' in data) || data.relevanceScore == null || (data.relevanceScore is number)) &&
+             (!('progress' in data) || data.progress == null || (data.progress is number)) &&
+             (!('archived' in data) || data.archived == null || data.archived is bool) &&
+             (!('onCanvas' in data) || data.onCanvas == null || data.onCanvas is bool) &&
+             (!('canvasPosition' in data) || data.canvasPosition == null || ((data.canvasPosition is map) && ('x' in data.canvasPosition) && ('y' in data.canvasPosition) && data.canvasPosition.x is number && data.canvasPosition.y is number));
+    }
+
+    function isValidSupertag(data) {
+      return data.userId == request.auth.uid &&
+             ('name' in data && data.name is string && data.name.size() > 0 && data.name.size() <= 128) &&
+             (!('description' in data) || data.description == null || (data.description is string && data.description.size() <= 2048)) &&
+             (!('color' in data) || data.color == null || (data.color is string && data.color.size() <= 64)) &&
+             (!('icon' in data) || data.icon == null || (data.icon is string && data.icon.size() <= 64)) &&
+             (!('order' in data) || data.order == null || data.order is number) &&
+             (!('tags' in data) || data.tags == null || (data.tags is list && data.tags.size() <= 500)) &&
+             (!('subClusters' in data) || data.subClusters == null || (data.subClusters is list && data.subClusters.size() <= 200));
+    }
+
+    match /tagMappings/{userId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    match /supertags/{supertagId} {
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidSupertag(request.resource.data);
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid && request.resource.data.userId == resource.data.userId && isValidSupertag(request.resource.data);
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    match /contentItems/{itemId} {
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      
+      allow create: if isSignedIn() && 
+                      isValidId(itemId) && 
+                      isValidContentItem(request.resource.data);
+      
+      allow update: if isSignedIn() && 
+                      isValidId(itemId) && 
+                      resource.data.userId == request.auth.uid &&
+                      request.resource.data.userId == resource.data.userId &&
+                      isValidContentItem(request.resource.data);
+      
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    match /canvasContainers/{containerId} {
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+  }
+}

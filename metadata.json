@@ -1,0 +1,6 @@
+{
+  "name": "Nexus Content Hub",
+  "description": "Centralized visual content management system. Visualize bookmarks, books, courses, and media on an infinite canvas with Obsidian-syncable notes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

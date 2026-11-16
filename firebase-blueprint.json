@@ -1,0 +1,73 @@
+{
+  "entities": {
+    "ContentItem": {
+      "title": "Content Item",
+      "description": "A piece of managed content (link, book, pdf, etc.)",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "url": { "type": "string" },
+        "type": { 
+          "type": "string",
+          "enum": ["course", "book", "bookmark", "social", "podcast", "video", "pdf", "other"]
+        },
+        "imageUrl": { "type": "string" },
+        "description": { "type": "string" },
+        "tags": { 
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "relevanceScore": { "type": "number", "description": "0-100" },
+        "progress": { "type": "number", "description": "0-100" },
+        "archived": { "type": "boolean" },
+        "siteName": { "type": "string" },
+        "notes": { "type": "string" },
+        "canvasPosition": {
+          "type": "object",
+          "properties": {
+            "x": { "type": "number" },
+            "y": { "type": "number" }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "type", "createdAt"]
+    },
+    "Supertag": {
+      "title": "Supertag",
+      "description": "A hierarchical tag folder/cluster containing child tags and sub-clusters",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "color": { "type": "string" },
+        "icon": { "type": "string" },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "subClusters": {
+          "type": "array",
+          "items": { "type": "object" }
+        },
+        "order": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "tags"]
+    }
+  },
+  "firestore": {
+    "contentItems": {
+      "schema": "ContentItem",
+      "description": "User digital library items"
+    },
+    "supertags": {
+      "schema": "Supertag",
+      "description": "User supertag clusters/folders"
+    }
+  }
+}
